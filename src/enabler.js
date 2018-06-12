@@ -2,8 +2,13 @@ import { DepGraph } from 'dependency-graph'
 
 export default function(store) {
 
-  const dag = new DepGraph()
-
+  const dag          = new DepGraph()
+  const actions      = store._actions
+  const getters      = store.getters
+  const dependencies = store._modules.root._rawModule.dependencies || store.state.dependencies
+  const config       = dependencies.config
+  const useModules   = config.hasOwnProperty('modules') && !!config.modules
+  delete config.modules
   buildDag()
 
   store.dependsOn = function(antecedent) {
@@ -23,35 +28,47 @@ export default function(store) {
   }
 
   function getAntecedents(module, dependent) {
-    let antecedents = {}
-    if(arguments.length == 2) {
-      antecedents = store.state.dependencies.config[module][dependent]
-    }
-    else if(arguments.length == 1) {
-      let dependent = arguments[0]
-      antecedents = store.state.dependencies.config[dependent]
+    let args = arguments, antecedents = {}, m, d
+    if(useModules) {
+      m = args[0], d = args[1]
+      antecedents = config[m][d]
     }
     else {
-      return [];
+      d = args[0]
+      antecedents = config[d]
     }
     if (typeof antecedents !== 'undefined') {
       return getKeys(antecedents)
     }
+    else {
+      return []
+    }
   }
 
   function getAntecedentConfig(module, dependent, antecedent) {
-    let config = store.state.dependencies.config
-    let args   = arguments
-    if(arguments.length == 3) { // 3 args
-      return config[module][dependent][antecedent]
+    let args = arguments, m, d, a
+    if(useModules) { // 3 args
+      m = args[0], d = args[1], a = args[2]
+      return config[m][d][a]
     }
-    else if(arguments.length == 2) { // 2 args
-      let d = args[0], a = args[1]
+    else { // 2 args
+      d = args[0], a = args[1]
       return config[d][a]
     }
-    else {
-      return {}
+  }
+
+  function addAntecedent(module, dependent, antecedent) {
+    let args = arguments, data = {}, m, d, a
+    if(useModules) { // 3 args
+      m = args[0], d = args[1], a = args[2]
+      data = config[m][d][a] || a
     }
+    else { // 2 args
+      d = args[0], a = args[1]
+      data = config[d][a] || a
+    }
+    dag.addNode(a,data)
+    dag.addDependency(d,a)
   }
 
 
@@ -59,38 +76,29 @@ export default function(store) {
   //TODO subscribeActions where needed
   //TODO dependsOn implementation
   function buildDag() {
-    let config  = store.state.dependencies.config
-    if(!!config.modules) {
-      let modules = getKeys(config)
+    let modules, dependents, antecedents
+    if(useModules) {
+      modules = getKeys(config)
       modules.forEach(m => {
-        if(m !== 'modules') {
-          let dependents = getKeys(config[m])
-          dependents.forEach(d => {
-            let name = m+'/'+d
-            dag.addNode(name)
-            let antecedents = getAntecedents(m,d)
-            antecedents.forEach(a => {
-              let data = getAntecedentConfig(m,d,a)
-              dag.addNode(a,data)
-              dag.addDependency(name,a)
-            })
+        dependents = getKeys(config[m])
+        dependents.forEach(d => {
+          let node = m+'/'+d
+          dag.addNode(node)
+          antecedents = getAntecedents(m,d)
+          antecedents.forEach(a => {
+            addAntecedent(m,d,a)
           })
-        }
+        })
       })
     }
     else {
-      let dependents = getKeys(config)
+      dependents = getKeys(config)
       dependents.forEach(d => {
-        if(d != 'modules') {
-          let name = d
-          dag.addNode(name)
-          let antecedents = getAntecedents(d)
-          antecedents.forEach(a => {
-            let data = getAntecedentConfig(d,a)
-            dag.addNode(a,data)
-            dag.addDependency(name,a)
-          })
-        }
+        dag.addNode(d)
+        antecedents = getAntecedents(d)
+        antecedents.forEach(a => {
+          addAntecedent(d,a)
+        })
       })
     }
     store._dag = dag;
