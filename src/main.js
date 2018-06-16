@@ -1,12 +1,12 @@
 import dag from './dag'
 
-import { commit, dispatch } from './vuex'
+import { dispatch, mapGetters } from 'vuex'
 
 export default dag
 
 export {
 
   // vuex
-  commit,
-  dispatch
+  // dispatch,
+  // mapGetters
 }

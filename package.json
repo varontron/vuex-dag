@@ -31,7 +31,8 @@
   },
   "dependencies": {
     "dependency-graph": "^0.7.1",
-    "vuex": "^3.0.1"
+    "vuex": "^3.0.1",
+    "vuex-pathify": "^1.1.0"
   },
   "devDependencies": {
     "node-sass": "^4.9.0",

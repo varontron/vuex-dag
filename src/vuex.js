@@ -5,13 +5,13 @@ const vuex = {
   store: {
     state: null,
 
-    commit () {
+    dispatch () {
       if (process.env.NODE_ENV !== 'production') {
         console.error('[vuex-dag] Plugin not initialized!')
       }
     },
 
-    dispatch () {
+    mapGetters () {
       if (process.env.NODE_ENV !== 'production') {
         console.error('[vuex-dag] Plugin not initialized!')
       }
@@ -19,12 +19,12 @@ const vuex = {
   }
 }
 
-export function commit(...args) {
-  vuex.store.commit(...args)
-}
-
 export function dispatch(...args) {
   vuex.store.dispatch(...args)
+}
+
+export function mapGetters(...args) {
+  vuex.store.mapGetters(...args);
 }
 
 export default vuex
