@@ -1,5 +1,5 @@
 
-const localDeps       = []
+const localDeps = []
 
 // returns an array of key values (lifted from vuex-pathify)
 export function getKeys (value) {
@@ -14,16 +14,18 @@ export function getKeys (value) {
           : []                         // empty array
 }
 
-// determines if the dag entry points to an action or
-export function getType(actions, node) {
-  if(!!actions[node])
+// determines if the intended dag entry points to an action or
+export function getType (store, node) {
+  if(!!store._dag && !!store._dag.getNodeData(node).type)
+    return store._dag.getNodeData(node).type
+  else if(!!store._actions[node])
     return 'action'
   else {
     return 'getter'
   }
 }
 
-export function setLocalDeps(dependencies,rootNode) {
+export function setLocalDependencies (dependencies, rootNode) {
   localDeps.length = 0;
   dependencies.forEach(i => localDeps.push(i))
   localDeps.push(rootNode)

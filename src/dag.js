@@ -1,16 +1,10 @@
 // plugin
-//import * as Vuex from 'vuex'
 import enable from './enabler'
 
-/**
- * Store plugin which updates the store object with set() and get() methods
- *
- * @param {Object} store  The store object
- */
-function plugin (store) {
-
+function enhanceVuex (store) {
   // Vuex mods
   // 'genericSubscribe' definition listed from vuex/src/store.js
+  // required to create _getterSubscribers
   store.genericSubscribe = function (fn, subs) {
     if (subs.indexOf(fn) < 0) {
       subs.push(fn)
@@ -26,18 +20,14 @@ function plugin (store) {
   store.subscribeGetter = function(fn) {
     return store.genericSubscribe(fn, store._getterSubscribers)
   }
-  // TODO implement mapGetters
+}
 
-  //Pathify mods
-
-
-
+function plugin (store) {
   // add dag functionality
+  enhanceVuex(store)
   enable(store)
 }
 
 export default {
-//  options,
-//  debug,
   plugin
 }

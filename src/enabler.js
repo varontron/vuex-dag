@@ -2,7 +2,6 @@ import { DepGraph } from 'dependency-graph'
 import { getKeys, getType } from './util.js'
 import { getDagProcessor } from './processor.js'
 
-
 export default function(store) {
 
   const PathifyArtiface = require('vuex-pathify')
@@ -16,7 +15,6 @@ export default function(store) {
 
   // meaty bit
   buildDag()
-  makeMutations()
   subscribe()
   // end
 
@@ -27,7 +25,7 @@ export default function(store) {
   }
 
   // builds the internal dag based on the 'dependencies' configuration
-  //TODO dependsOn implementation
+  // internally m, d, & a will hold, if present, module, dependent, & antecedent
   function buildDag() {
     let modules, dependents, antecedents
     if(useModules) {
@@ -36,7 +34,8 @@ export default function(store) {
         dependents = getKeys(config[m])
         dependents.forEach(d => {
           let node = m+'/'+d
-          dag.addNode(node,{type:getType(actions, node)})
+          let type = !!actions[node] ? 'action' : 'getter'
+          dag.addNode(node,{ type })
           antecedents = getAntecedents(m,d)
           antecedents.forEach(a => {
             addAntecedent(m,d,a)
@@ -47,7 +46,8 @@ export default function(store) {
     else {
       dependents = getKeys(config)
       dependents.forEach(d => {
-        dag.addNode(d,{type:getType(actions, d)})
+        let type = !!actions[d] ? 'action' : 'getter'
+        dag.addNode(d,{ type })
         antecedents = getAntecedents(d)
         antecedents.forEach(a => {
           addAntecedent(d,a)
@@ -60,8 +60,8 @@ export default function(store) {
 
   // registers action and getter handler functions for all nodes in the dag
   function subscribe() {
-    store.subscribeAction(getDagProcessor(store,actions))
-    store.subscribeGetter(getDagProcessor(store,actions))
+    store.subscribeAction(getDagProcessor(store))
+    store.subscribeGetter(getDagProcessor(store))
     Object.keys(store._wrappedGetters).forEach(f => {
       let fn = store._wrappedGetters[f]
       store._wrappedGetters[f] = function(store) {
@@ -71,11 +71,8 @@ export default function(store) {
     })
   }
 
-  function makeMutations() {
-
-  }
-
   // gets the list of antecedents from the 'dependecies' config
+  // internally m and d will hold module if present, and dependent
   function getAntecedents(module, dependent) {
     let args = arguments, antecedents = {}, m, d
     if(useModules) {
@@ -99,7 +96,8 @@ export default function(store) {
   }
 
   // gets the configuration object associated to the antecedent
-  function getAntecedentConfig(module, dependent, antecedent) {
+  // internally m, d, and a will hold module if present, dependent, and antecedent
+  function getAntecedntConfig(module, dependent, antecedent) {
     let args = arguments, m, d, a
     if(useModules) { // 3 args
       m = args[0], d = args[1], a = args[2]
@@ -112,6 +110,7 @@ export default function(store) {
   }
 
   // adds the antecedent as defined in the 'dependencies' configuration into the dag
+  // internally m, d, and a will hold module if present, dependent, and antecedent
   function addAntecedent(module, dependent, antecedent) {
     let args = arguments, data = {}, m, d, a
     if(useModules) { // 3 args
@@ -123,7 +122,7 @@ export default function(store) {
       data = config[d][a] || {}
     }
     if(!data.hasOwnProperty('type'))
-      data['type'] = getType(actions, a)
+      data['type'] = getType(store, a)
     dag.addNode(a,data)
     dag.addDependency(d,a)
   }
