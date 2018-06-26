@@ -3,12 +3,15 @@ import { getKeys, getType } from './util.js'
 import { getDagProcessor } from './processor.js'
 
 export default function(store) {
+  const dependencies    = store._modules.root._rawModule.dependencies || store.state.dependencies
+  if(!!!dependencies)
+    return
 
   const PathifyArtiface = require('vuex-pathify')
   const dag             = new DepGraph()
   const actions         = store._actions
   const getters         = store.getters
-  const dependencies    = store._modules.root._rawModule.dependencies || store.state.dependencies
+
   const config          = dependencies.config
   const useModules      = config.hasOwnProperty('modules') && !!config.modules
   delete config.modules
@@ -18,15 +21,9 @@ export default function(store) {
   subscribe()
   // end
 
-  // TODO implement dependsOn
-  // intended to enable dependencies to be added directly to actions
-  store.dependsOn = function(antecedent) {
-
-  }
-
   // builds the internal dag based on the 'dependencies' configuration
   // internally m, d, & a will hold, if present, module, dependent, & antecedent
-  function buildDag() {
+  function buildDag () {
     let modules, dependents, antecedents
     if(useModules) {
       modules = getKeys(config)
@@ -59,9 +56,10 @@ export default function(store) {
   }
 
   // registers action and getter handler functions for all nodes in the dag
-  function subscribe() {
-    store.subscribeAction(getDagProcessor(store))
-    store.subscribeGetter(getDagProcessor(store))
+  function subscribe () {
+    store.subscribeAction(getDagProcessor(store)) // registers actual handler
+    //store.subscribeGetter(getDagProcessor(store)) // registers actual handler
+    // inject subscriber functions to getters
     Object.keys(store._wrappedGetters).forEach(f => {
       let fn = store._wrappedGetters[f]
       store._wrappedGetters[f] = function(store) {
@@ -73,7 +71,7 @@ export default function(store) {
 
   // gets the list of antecedents from the 'dependecies' config
   // internally m and d will hold module if present, and dependent
-  function getAntecedents(module, dependent) {
+  function getAntecedents (module, dependent) {
     let args = arguments, antecedents = {}, m, d
     if(useModules) {
       m = args[0], d = args[1]
@@ -97,7 +95,7 @@ export default function(store) {
 
   // gets the configuration object associated to the antecedent
   // internally m, d, and a will hold module if present, dependent, and antecedent
-  function getAntecedntConfig(module, dependent, antecedent) {
+  function getAntecedntConfig (module, dependent, antecedent) {
     let args = arguments, m, d, a
     if(useModules) { // 3 args
       m = args[0], d = args[1], a = args[2]
@@ -111,7 +109,7 @@ export default function(store) {
 
   // adds the antecedent as defined in the 'dependencies' configuration into the dag
   // internally m, d, and a will hold module if present, dependent, and antecedent
-  function addAntecedent(module, dependent, antecedent) {
+  function addAntecedent (module, dependent, antecedent) {
     let args = arguments, data = {}, m, d, a
     if(useModules) { // 3 args
       m = args[0], d = args[1], a = args[2]
@@ -126,4 +124,11 @@ export default function(store) {
     dag.addNode(a,data)
     dag.addDependency(d,a)
   }
+
+  // TODO implement dependsOn
+  // intended to enable dependencies to be added directly to actions
+  store.dependsOn = function (antecedent) {
+
+  }
+
 }
