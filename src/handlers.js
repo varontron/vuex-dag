@@ -1,4 +1,5 @@
-import { getType, getRawAntecedents, setRawAntecedents, setProcessedAntecedents, getProcessedAntecedents  } from './util.js'
+import { isValid, getType, getRawAntecedents, setRawAntecedents, setProcessedAntecedents, getProcessedAntecedents  } from './util.js'
+import { isNull, isUndefined, isEmpty, isInvalid } from './module'
 
 export function antecedentHandler (store, prevNode) {
   let rawAnts = getRawAntecedents(store)
@@ -6,7 +7,10 @@ export function antecedentHandler (store, prevNode) {
   setRawAntecedents(store,rawAnts)
   setProcessedAntecedents(store, [...getProcessedAntecedents(store),nextNode])
   console.log('Excuting antecendentHandler for ['+nextNode+']')
-
+  console.log('  nextNode type is: '+store._dag.getNodeData(nextNode).type)
+  console.log('  prevNode type is: '+store._dag.getNodeData(prevNode).type)
+  if(store._dag.getNodeData(nextNode).type === 'action' && store._dag.getNodeData(prevNode).type ===  'getter')
+    console.log('   THIS IS A SCENARIO IN WHICH CONDITIONAL PROCESSING SHOULD BE EMPLOYED')
   if(getType(store,nextNode) === 'action') {
     let action = store._actions[nextNode]
     if(Array.isArray(action))

@@ -12,6 +12,19 @@ export function getKeys (value) {
           : []                         // empty array
 }
 
+// evaluates value of property against configured criteria
+// which could include 'isUndefined','isNull', 'isEmpty', 'isInvalid'
+export function isValid (store, node) {
+  let value  = store.get(node)
+  let config = store._dag.getNodeData(node)
+  let keys   = Object.keys(config)
+  if(keys.includes('isUndefined') && typeof value === 'undefined') return false
+  if(keys.includes('isNull')      && value === null) return false
+  if(keys.includes('isEmpty') && (Array.isArray(value) || typeof value == 'string') && value.length == 0) return false
+  if(keys.includes('isEmpty') && Object.keys(value).length == 0) return false
+  return true
+}
+
 // determines if the intended dag entry points to an action or
 export function getType (store, node) {
   if(!!store._dag && !!store._dag.getNodeData(node).type)

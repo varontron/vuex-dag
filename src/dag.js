@@ -1,6 +1,7 @@
 // plugin
 import enableDag from './enabler'
 import enhanceVuex from './vuex'
+import dependencies from './module'
 
 function plugin (store) {
   enhanceVuex(store)
@@ -8,5 +9,6 @@ function plugin (store) {
 }
 
 export default {
+  dependencies,
   plugin
 }
