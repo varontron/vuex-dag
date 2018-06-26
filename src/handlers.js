@@ -12,19 +12,17 @@ export function antecedentHandler (store, prevNode) {
     if(Array.isArray(action))
       action = action[0]
     return action
+
     //TODO check for conditional execution rules so actions won't fire unless rules
     //     stipulate they must, e.g., antecedent getter == undefined, null, "", [], or {}
     //TODO enable configuration of action antecedent getters to be passed as payload to action
-    //store.set('dependencies/active@entry', [this._actions[type],...store.get('dependencies/active@entry')])
-    //store.set(nextNode+'!') // maybe this should be in a try/catch instead of an if
   }
   else // getter
   {
-    console.log(store.get(nextNode)) // log getter value
     return
 
     /*
-     * nothing to do here
+     * nothing to do here...yet
      *
      * see README in https://github.com/varontron/vuex-dag or diagram at
      * https://github.com/varontron/vuex-dag/blob/master/vuex-dag-configuration.png

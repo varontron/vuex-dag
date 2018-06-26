@@ -35,6 +35,8 @@ export function getDagProcessor (store)
       procAnts = getProcessedAntecedents(store)
     }
 
+    // dagFn will take an array of promises and uses 'reduce' to chain them
+    // together
     const dagFn = function(callbacks) {
       if(typeof callbacks === 'undefined') {
         return () => { new Promise((resolve,reject) => {resolve()}) }
@@ -46,8 +48,10 @@ export function getDagProcessor (store)
 
     const antecedentFuncs = []
 
-    // iterate over rawDeps, but only unprocessed ones
+    // iterate over rawAnts, but only unprocessed ones
     // and in reverse order from last antecedent
+
+    // store the previous node
     _prevNode = _node
     while(rawAnts.length > 0)
     {
@@ -66,11 +70,15 @@ export function getDagProcessor (store)
       // {
       //   console.log('skipped handler for [' + _node + ']')
       // }
+
+      // reset the previous node to the most recently processed
       _prevNode = _node
     }
 
+    // clean the store
     resetAntecedents(store)
 
+    // return the promise chain
     return dagFn(antecedentFuncs)
   }
 }

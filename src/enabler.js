@@ -58,15 +58,6 @@ export default function(store) {
   // registers action and getter handler functions for all nodes in the dag
   function subscribe () {
     store.subscribeAction(getDagProcessor(store)) // registers actual handler
-    //store.subscribeGetter(getDagProcessor(store)) // registers actual handler
-    // inject subscriber functions to getters
-    Object.keys(store._wrappedGetters).forEach(f => {
-      let fn = store._wrappedGetters[f]
-      store._wrappedGetters[f] = function(store) {
-        store._getterSubscribers.forEach(sub => sub(f, store.state))
-        return fn(store)
-      }
-    })
   }
 
   // gets the list of antecedents from the 'dependecies' config
@@ -123,12 +114,6 @@ export default function(store) {
       data['type'] = getType(store, a)
     dag.addNode(a,data)
     dag.addDependency(d,a)
-  }
-
-  // TODO implement dependsOn
-  // intended to enable dependencies to be added directly to actions
-  store.dependsOn = function (antecedent) {
-
   }
 
 }
