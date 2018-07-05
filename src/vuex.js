@@ -1,3 +1,5 @@
+import { getKeys } from './util'
+
 export default function (store) {
 
   // adding internal vuex function
@@ -28,14 +30,14 @@ export default function (store) {
   // overriding 'dispatch' to enable return of promiseChain from
   // _actionSubscribers, and to execute it before the originally dispatched
   // action
-  store.dispatch =  function (_type, _payload) {
+  store.dispatch = function (_type, _payload) {
     // check object-style dispatch
     const {
       type,
       payload
     } = store.unifyObjectStyle(_type, _payload)
 
-    console.log('Executing dispatch override for ['+type+']')
+    //console.log('Executing dispatch override for ['+type+']')
 
     const action = { type, payload }
     const entry = this._actions[type]
@@ -59,7 +61,20 @@ export default function (store) {
     })
   }
 
+  store.genericSubscribe = function (fn, subs) {
+    if (subs.indexOf(fn) < 0) {
+      subs.push(fn)
+    }
+    return () => {
+      const i = subs.indexOf(fn)
+      if (i > -1) {
+        subs.splice(i, 1)
+      }
+    }
+  }
+
   // TODO implement dependsOn
   // intended to enable dependencies to be added directly to actions
   store.dependsOn = function (antecedent) { }
+
 }
