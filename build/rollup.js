@@ -19,8 +19,8 @@ function output (ext, format = 'umd') {
     name: className,
     file: `dist/${name}.${ext}`,
     format: format,
-    treeshake: treeshake
-    // exports: 'default',
+    treeshake: treeshake,
+    exports: 'named',
   }
 }
 
