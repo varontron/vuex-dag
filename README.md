@@ -1,6 +1,21 @@
 # vuex-dag
 A vuex plugin which builds and enables execution of a dependency graph of getters and actions.
 
+
+#### Dependency Configuration Specification
+```
+vuex-action       = string ;
+vuex-getter       = string ;
+vuex-property     = string ;
+dependent         = vuex-action | vuex-getter | vuex-property ;
+antecedent-name   = vuex-action | vuex-getter | vuex-property ;   
+antecedent-spec   = "{", "every", ":", "true" "}" ;
+antecedent-object = "{", antecedent-name, ":", antecedent-spec, "}" ;
+single-antecedent = antecedent-name | antecedent-object ;
+antecendent-list  = "[", single-antecedent, [ { ",", single-antecedent } ], "]" ;
+antecedent        = single-antecedent | antecedent-list ;
+dependency        = dependent, ":", antecedent ;  
+```
 #### Dependency configuration logic
 
 ![](https://github.com/varontron/vuex-dag/blob/master/vuex-dag-configuration.png)
