@@ -12,16 +12,22 @@ export function getKeys (value) {
           : []                         // empty array
 }
 
-// evaluates value of property against configured criteria
-// which could include 'isUndefined','isNull', 'isEmpty', 'isInvalid'
+// evaluates value of property and only returns false if value is falsey
+// or if spec.every is true
 export function isValid (store, node) {
-  let value  = store.get(node)
-  let config = store._dag.getNodeData(node)
-  let keys   = Object.keys(config)
-  if(keys.includes('isUndefined') && typeof value === 'undefined') return false
-  if(keys.includes('isNull')      && value === null) return false
-  if(keys.includes('isEmpty') && (Array.isArray(value) || typeof value == 'string') && value.length == 0) return false
-  if(keys.includes('isEmpty') && Object.keys(value).length == 0) return false
+
+  const spec = store._dag.getNodeData(node)
+
+  if(typeof spec !== 'undefined') {
+    const keys = Object.keys(spec)
+    if(keys.includes('every') && !!spec.every) return false
+  }
+
+  const value  = store.get(node)
+  if(typeof value === 'undefined') return false
+  if(value === null) return false
+  if((Array.isArray(value) || typeof value == 'string') && value.length == 0) return false
+  if(Object.keys(value).length == 0) return false
   return true
 }
 
@@ -34,6 +40,15 @@ export function getType (store, node) {
   else {
     return 'getter'
   }
+}
+
+// returns getter nodes dependent on node
+export function getDependents(store, node) {
+  // return immediately if node is not in dag
+  if (!hasNode(store, node)) { return }
+  // return filtered list of getters only (i.e., not actions)
+  return getIncomingEdgeTargets(store,node)
+         .filter(n => { return getType(store,n) !== 'action' })
 }
 
 // wrapper for dependency-graph api called on store
@@ -59,7 +74,7 @@ export function getRawAntecedents (store) {
 // commits raw antecedent snapshot to store. used as a loop limit
 // to determine if 'depencies/active' should be reset
 export function setRawAntecedentsSnapshot (store, type) {
-  let snap = [...getRawAntecedents(store), ...type]
+  let snap = [...type,  ...getRawAntecedents(store)]
   store.set('dependencies/active@antecedents.snapshot', snap)
 }
 
@@ -78,6 +93,11 @@ export function getProcessedAntecedents (store) {
   return store.get('dependencies/active@antecedents.processed')
 }
 
+// mutates the specified
+export function removeRawAntecedent (store, array) {
+
+}
+
 // compares contents of arrays 'a' and 'b' to ensure both contain all
 // the same values and only the same values
 export function arrayContentsAreEqual(a,b) {
@@ -88,17 +108,29 @@ export function arrayContentsAreEqual(a,b) {
 
 // clears all arrays in the 'dependencies/active' module
 export function resetAntecedents(store) {
-  store.set('dependencies/active@raw',[])
-  store.set('dependencies/active@processed',[])
-  store.set('dependencies/active@snapshot',[])
+  store.set('dependencies/active@antecedents.raw',[])
+  store.set('dependencies/active@antecedents.processed',[])
+  store.set('dependencies/active@antecedents.snapshot',[])
+}
+
+// returns all nodes which depend on node
+export function getIncomingEdgeTargets (store, node) {
+  return store._dag.incomingEdges[node]
 }
 
 // currently unused
-export function getOutgoingEdgeTargets (store, type) {
-  return store._dag.outgoingEdges[type]
+export function getOutgoingEdgeTargets (store, node) {
+  return store._dag.outgoingEdges[node]
 }
 
 // currently unused
+
+
 export function antecedentIsQueued (store, antecedent) {
   return getRawAntecedents(store).includes(antecedent)
+}
+
+// currently unused
+export function getSpec (store, node) {
+  return store._dag.getNodeData(node)
 }
