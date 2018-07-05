@@ -7,7 +7,6 @@ export default function(store) {
   if(!!!dependencies)
     return
 
-  const PathifyArtiface = require('vuex-pathify')
   const dag             = new DepGraph()
   const actions         = store._actions
   const getters         = store.getters
@@ -59,6 +58,8 @@ export default function(store) {
   function subscribe () {
     store.subscribeAction(getDagProcessor(store)) // registers actual handler
   }
+
+
 
   // gets the list of antecedents from the 'dependecies' config
   // internally m and d will hold module if present, and dependent
