@@ -21,7 +21,7 @@ export function getDagProcessor (store)
       return
     }
 
-    console.log("in subscriber for ["+_node+"]")
+    //console.log("in subscriber for ["+_node+"]")
 
     // loop protection
     let rawAnts  = getRawAntecedents(store)
@@ -30,6 +30,7 @@ export function getDagProcessor (store)
     if(rawAnts.length == 0 && !arrayContentsAreEqual(procAnts, snap))
     {
       setRawAntecedents(store, getAntecedentsOf(store,_node).reverse())
+      setProcessedAntecedents(store, [_node])
       setRawAntecedentsSnapshot(store, [_node])
       rawAnts = getRawAntecedents(store)
       procAnts = getProcessedAntecedents(store)
@@ -56,20 +57,14 @@ export function getDagProcessor (store)
     while(rawAnts.length > 0)
     {
       _node = rawAnts[0]
-      console.log('calling handler for [' + _node + ']')
-      // if(getType(store, _node) === 'action')  //TODO test for action type?
-      // {
-        let antecedent =  antecedentHandler(store,_prevNode)
-        if(typeof antecedent === 'undefined') {
-          antecedent = () => { new Promise((resolve,reject) => {resolve()}) }
-        }
-        antecedentFuncs.push(antecedent)
-        console.log('called handler for [' + _node + ']')
-      // }
-      // else
-      // {
-      //   console.log('skipped handler for [' + _node + ']')
-      // }
+      //console.log('calling handler for [' + _node + ']')
+
+      let antecedent =  antecedentHandler(store,_prevNode)
+      if(typeof antecedent === 'undefined') {
+        antecedent = () => { new Promise((resolve,reject) => {resolve()}) }
+      }
+      antecedentFuncs.push(antecedent)
+      //console.log('called handler for [' + _node + ']')
 
       // reset the previous node to the most recently processed
       _prevNode = _node
